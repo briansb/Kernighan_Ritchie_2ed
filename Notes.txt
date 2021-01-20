@@ -1,0 +1,41 @@
+ static keyword inside functions allows a variable to retain its value...
+	int main() {
+	        count();
+	        count();
+	        count();
+        } 
+	void count() {
+	        static int callCount = 0; /* this is important.  This statement
+   					  is executed AT COMPILE TIME.  It will
+ 					  NOT be executed during run time.  */
+	        ++callCount;
+	       printf("The function \"count\" was called %d times.\n", callCount);
+         }
+	
+	The output is:
+	    The function count was called 1 times.
+	    The function count was called 2 times.
+	    The function count was called 3 times.
+
+============================================================================================
+when a function already exists in a system library,
+	#define qsort qsort_orig  /* define stdlib qsort to qsort_orig */
+	#include <stdlib.h>       /* for random number generation */
+	#undef qsort     /* lose the original qsort */
+
+	void qsort(int v[], int lef, int right);  /* now qsort() will be defined locally */
+
+=============================================================================================
+this is how to handle strings in C
+	char *pa = "brian";
+	printf("%s is the string\n", pa);
+
+
+
+To use gdb with command-line arguments:
+
+gdb --args Progname arg1 arg2
+
+or
+
+(gdb) r arg1 arg2
