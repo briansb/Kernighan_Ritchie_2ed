@@ -1,0 +1,6 @@
+I don't know what they want.
+
+I guess you could solve the problem by making buf[] an integer array.
+Then, EOF (-1) would be handled. 
+
+But I don't see an EOF ever being pushed back.

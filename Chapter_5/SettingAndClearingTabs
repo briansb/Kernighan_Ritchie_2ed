@@ -1,0 +1,11 @@
+https://www.linux.org/docs/man1/tabs.html
+
+	tabs 11,20,25   -   sets tabs at column 11, 20, and 25
+	tabs -0         -   clears all tabs
+	tabs -8         -   sets tabs at interval -   8, 16, 24 
+
+
+https://www.tutorialspoint.com/unix_commands/setterm.htm
+
+	setterm -tabs   -   shows current tab settings
+
