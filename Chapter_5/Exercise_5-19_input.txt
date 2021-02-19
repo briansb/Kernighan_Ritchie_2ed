@@ -1,0 +1,13 @@
+argve * * char
+daytab * [13] int
+daytabe [13] * int
+compe () * void
+comp * () void
+x () * [] * () char
+x [3] * () * [5] char
+
+
+
+argve  -too many parentheses
+daytabe -too many parentheses
+compe   -too many parentheses
