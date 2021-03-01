@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#define MAXWORD 100
+#define MAXWORD 100     /* max size of a word */
 #define BUFSIZE 100     /* max size of ungetch buffer */
 #define NKEYS (sizeof keytab / sizeof keytab[0])
 
@@ -45,6 +45,9 @@ struct key {
 };
 
 int getword(char *, int);
+int getword_v2(char *, int);
+int islegalvarchar(int c);
+int isparenorbracket(int c);
 int binsearch(char *, struct key *, int);
 int getch(void);
 void ungetch(int c);
@@ -57,10 +60,15 @@ int main() {
     int n;
     char word[MAXWORD];
 
-    while (getword(word, MAXWORD) != EOF)
+    //while (getword(word, MAXWORD) != EOF)
+    while (getword_v2(word, MAXWORD) != EOF) {
+        printf("Examining %s\n", word);
         if (isalpha(word[0]))
             if ((n = binsearch(word, keytab, NKEYS)) >= 0)
                 keytab[n].count++;
+    }
+
+    
     for (n = 0; n < NKEYS; n++)
         if (keytab[n].count > 0)
             printf("%4d %s\n",
@@ -68,29 +76,54 @@ int main() {
     return 0;
 }
 
-/* getword:  get next word of character from input */
-int getword(char *word, int lim) {
+/* getword_v2:  get next word of character from input */
+int getword_v2(char *word, int lim) {
     int c, getch(void);
     void ungetch(int);
     char *w = word;
 
-    while (isspace(c = getch()))
-        ;
-    if (c != EOF)
-        *w++ = c;
-    if (!isalpha(c)) {
-        *w = '\0';
-        return EOF;
+    c = getch();
+    while ( isspace(c) || isparenorbracket(c)) {
+        c = getch();
     }
-    for ( ; --lim > 0; w++)
-        if (!isalnum(*w = getch())) {
-            ungetch(*w);
-            break;
+    
+    /* check for alphanumeric or _ */
+    if (islegalvarchar(c)) {
+        *w++ = c;
+        while (islegalvarchar(c = getch())) {
+            *w++ = c;
         }
-    *w = '\0';
-    return word[0];
+        ungetch(c);
+        *w = '\0';
+        return word[0];
+    }
+
+    if (c == EOF) return EOF;
+
+    // if (c != EOF)
+    //     *w++ = c;
+    // if (!isalpha(c)) {
+    //     *w = '\0';
+    //     return EOF;
+    // }
+    // for ( ; --lim > 0; w++)
+    //     if (!isalnum(*w = getch())) {
+    //         ungetch(*w);
+    //         break;
+    //     }
+    // *w = '\0';
+    // return word[0];
 }
 
+int islegalvarchar(int c) {
+    if (isalnum(c) || c == 95) return 1;
+    return 0;
+}
+
+int isparenorbracket(int c) {
+    if (c == 40 || c == 41 || c == 123 || c == 125) return 1;
+    return 0;
+}
 /* binsearch:  find word in tab[0]...tab[n-1] */
 int binsearch(char *word, struct key tab[], int n)
 {
@@ -118,4 +151,28 @@ void ungetch(int c) {   /* push character back on input */
 		printf("ungetch:  too many characters\n");
 	else
 		buf[bufp++] = c;
+}
+
+
+/* getword:  get next word of character from input */
+int getword(char *word, int lim) {
+    int c, getch(void);
+    void ungetch(int);
+    char *w = word;
+
+    while (isspace(c = getch()))
+        ;
+    if (c != EOF)
+        *w++ = c;
+    if (!isalpha(c)) {
+        *w = '\0';
+        return EOF;
+    }
+    for ( ; --lim > 0; w++)
+        if (!isalnum(*w = getch())) {
+            ungetch(*w);
+            break;
+        }
+    *w = '\0';
+    return word[0];
 }
