@@ -45,6 +45,8 @@ struct key {
 };
 
 int getword(char *, int);
+int getword_v2(char *, int);
+int expanded_white_space(int);
 int binsearch(char *, struct key *, int);
 int getch(void);
 void ungetch(int c);
@@ -57,7 +59,8 @@ int main() {
     int n;
     char word[MAXWORD];
 
-    while (getword(word, MAXWORD) != EOF) {
+    //while (getword(word, MAXWORD) != EOF)
+    while (getword_v2(word, MAXWORD) != EOF) {
         printf("Examining %s\n", word);
         if (isalpha(word[0]))
             if ((n = binsearch(word, keytab, NKEYS)) >= 0)
@@ -70,6 +73,37 @@ int main() {
             printf("%4d %s\n",
                 keytab[n].count, keytab[n].word);
     return 0;
+}
+
+/* getword_v2:  get next word of character from input */
+/* treat spaces, parentheses, braces, brackets, equal, 
+                  as white space */
+int getword_v2(char *word, int lim) {
+    int c, getch(void);
+    void ungetch(int);
+    char *w = word;
+
+    while ( expanded_white_space(c=getch()) ) {
+        ;
+    }
+    if (c == EOF) return EOF;
+
+    *w++ = c;
+    while ( !expanded_white_space(c=getch()) ) {
+        *w++ = c;
+    }
+    ungetch(c);
+    *w = '\0';
+    return word[0];
+
+}
+
+int expanded_white_space(int c) {
+    /*    space             (         )           {           }          [          ]  */
+    if (isspace(c) || c == 40 || c == 41 || c == 123 || c == 125 || c == 91 || c == 93 ) return 1;
+    /*        =          !          ;      */
+    if ( c == 61 || c == 33 || c == 59) return 1;
+    return 0;        
 }
 
 /* binsearch:  find word in tab[0]...tab[n-1] */
@@ -99,28 +133,4 @@ void ungetch(int c) {   /* push character back on input */
 		printf("ungetch:  too many characters\n");
 	else
 		buf[bufp++] = c;
-}
-
-
-/* getword:  get next word of character from input */
-int getword(char *word, int lim) {
-    int c, getch(void);
-    void ungetch(int);
-    char *w = word;
-
-    while (isspace(c = getch()))
-        ;
-    if (c != EOF)
-        *w++ = c;
-    if (!isalpha(c)) {
-        *w = '\0';
-        return EOF;
-    }
-    for ( ; --lim > 0; w++)
-        if (!isalnum(*w = getch())) {
-            ungetch(*w);
-            break;
-        }
-    *w = '\0';
-    return word[0];
 }

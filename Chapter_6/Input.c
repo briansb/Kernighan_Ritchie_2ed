@@ -4,7 +4,7 @@
 int main() {
 	
     int c ;
-    
+    char *one_two = "stringconstant";
     
     while ((c = getchar()) != EOF) {
         while (c == 32) {
