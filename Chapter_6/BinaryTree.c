@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAXWORD 100
 #define BUFSIZE 100     /* max size of ungetch buffer */
@@ -22,8 +23,8 @@ char buf[BUFSIZE];      /* buffer for ungetch */
 int bufp = 0;           /* next free position in buf */
 
 struct tnode *talloc(void);      /* for addtree */
-char *strdup(char *);
-
+struct tnode *talloc(void);
+char *strdup_bb(char *);
 
 /* word frequency count */
 int main() {
@@ -45,7 +46,7 @@ struct tnode *addtree(struct tnode *p, char *w) {
 
     if (p == NULL) {    /* a new word has arrived */
         p = talloc();   /* make a new node */
-        p->word = strdup(w);
+        p->word = strdup_bb(w);
         p->count = 1;
         p->left = p->right = NULL;
     } else if ((cond = strcmp(w, p->word)) == 0)
@@ -57,13 +58,27 @@ struct tnode *addtree(struct tnode *p, char *w) {
     return p;
 }
 
-/* treeprint:  in-order priknt of tree p */
+/* treeprint:  in-order print of tree p */
 void treeprint(struct tnode *p) {
     if (p != NULL) {
         treeprint(p->left);
         printf("%4d %s \n", p->count, p->word);
         treeprint(p->right);
     }
+}
+
+/* talloc:  make a node */
+struct tnode *talloc(void) {
+    return (struct tnode *)malloc(sizeof(struct tnode));
+}
+
+/* stdrdup: make a duplicate of s */
+char *strdup_bb(char *s) {
+    char *p;
+    p = (char *) malloc(strlen(s)+1);  /* +1 for '\0' */
+    if (p != NULL)
+        strcpy(p, s);
+    return p;
 }
 
 /* getword:  get next word of character from input */
