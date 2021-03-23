@@ -46,6 +46,9 @@ struct key {
 };
 
 int getword(char *, int);
+int unwantedcharacter(int c);
+int isalpha_underscore(int c);
+int isalnum_underscore(int c);
 int binsearch(char *, struct key tab[], int);
 int getch(void);
 void ungetch(int c);
@@ -59,10 +62,15 @@ int main() {
 	char word[MAXWORD];
 
 	while (getword(word, MAXWORD) != EOF) {
-		//printf("Examining %s\n", word);
+		printf("Examining %s\n", word);
 		if (isalpha(word[0]))
-			if ((n = binsearch(word, keytab, NKEYS)) >= 0)
+			if ((n = binsearch(word, keytab, NKEYS)) >= 0) {
 				keytab[n].count++;
+				printf("\t%s is a keyword\n", word);
+			}
+			else {
+				printf("\t%s is not a keyword\n", word);
+			}
 	}
 
 
@@ -72,6 +80,84 @@ int main() {
 				keytab[n].count, keytab[n].word);
 
 	return 0;
+}
+
+/* getword:  get next word or character from input */
+/* additions:  
+	1. Does not return (, ), {, }, [, ], =, ;, etc   */
+int getword(char *word, int lim) {
+	int c;
+	char *w = word;
+
+	while (unwantedcharacter(c = getch()))
+		;
+	if (c != EOF)
+		*w++ = c;
+
+	// change isalpha to islegalstart, for alpha, num, #, ", /* ,etc.
+	if (isalpha_underscore(c)) {
+		/* starting a function name, keyword, or variable */
+		for (; --lim > 0; w++)
+		if (!isalnum_underscore(*w = getch())) {
+			ungetch(*w);
+			*w = '\0';
+			return word[0];
+		}
+	} else if (c == 35) {
+		/* preprocessor directive... # = 35, CR = 10 */
+		while ((*w = getch()) != 10) {
+			w++;
+		}
+		ungetch(*w);
+		*w = '\0';
+		return word[0];
+	}
+
+	if (!isalpha(c)) {
+		*w = '\0';
+		return c;
+	}
+	
+	*w = '\0';
+	return word[0];
+	
+/*****************************
+	int c;
+	char *w = word;
+	while (isspace(c = getch()))
+		;
+	if (c != EOF)
+		*w++ = c;
+	if (!isalpha(c)) {
+		*w = '\0';
+		return c;
+	}
+	for (; --lim > 0; w++)
+		if (!isalnum(*w = getch())) {
+			ungetch(*w);
+			break;
+		}
+	*w = '\0';
+	return word[0];
+	                 *********************/
+}
+
+int isalpha_underscore(int c) {
+	if (isalpha(c) || c == '_') return 1;
+	else return 0;
+}
+int isalnum_underscore(int c) {
+	if (isalnum(c) || c == '_') return 1;
+	else return 0;
+}
+int unwantedcharacter(int c){
+	//   whitespace         {           }          [          ]
+	if (isspace(c) || c == 123 || c == 125 || c == 91 || c == 93 ) return 1;
+	//        (          )         =          ;
+	if (c == 40 || c == 41 || c == 61 || c == 59 ) return 1;
+	//       +          -   
+	if (c == 43 || c == 45 ) return 1;
+	else return 0;
 }
 
 /* binsearch:  find word in tab[0]...tab[n-1] */
@@ -102,27 +188,3 @@ void ungetch(int c) {   /* push character back on input */
 	else
 		buf[bufp++] = c;
 }
-
-
-/* getword:  get next word of character from input */
-int getword(char *word, int lim) {
-	int c;
-	char *w = word;
-
-	while (isspace(c = getch()))
-		;
-	if (c != EOF)
-		*w++ = c;
-	if (!isalpha(c)) {
-		*w = '\0';
-		return c;
-	}
-	for (; --lim > 0; w++)
-		if (!isalnum(*w = getch())) {
-			ungetch(*w);
-			break;
-		}
-	*w = '\0';
-	return word[0];
-}
-

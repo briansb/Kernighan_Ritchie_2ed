@@ -90,7 +90,7 @@ struct key *binsearch(char *word, struct key *tab, int n)
     return NULL;
 }
 
-/* getword:  get next word of character from input */
+/* getword:  get next word or character from input */
 int getword(char *word, int lim) {
 	int c;
 	char *w = word;

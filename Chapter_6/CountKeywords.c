@@ -59,7 +59,6 @@ int main() {
 	char word[MAXWORD];
 
 	while (getword(word, MAXWORD) != EOF) {
-		//printf("Examining %s\n", word);
 		if (isalpha(word[0]))
 			if ((n = binsearch(word, keytab, NKEYS)) >= 0)
 				keytab[n].count++;
@@ -104,7 +103,7 @@ void ungetch(int c) {   /* push character back on input */
 }
 
 
-/* getword:  get next word of character from input */
+/* getword:  get next word or character from input */
 int getword(char *word, int lim) {
 	int c;
 	char *w = word;
