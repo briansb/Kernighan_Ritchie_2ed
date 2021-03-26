@@ -111,6 +111,20 @@ int getword(char *word, int lim) {
 		ungetch(*w);
 		*w = '\0';
 		return word[0];
+	} else if (c == 47 ) {
+		/* possible beginning of comment */
+		if ((c = getch()) == 42) {
+			*w++ = c;
+			while ((*w = getch()) != 47) {
+				w++;
+			}
+			*(w+1) = '\0';
+			return word[0];
+		}
+		else {
+			/* not a comment */
+			ungetch(c);
+		}
 	}
 
 	if (!isalpha(c)) {
