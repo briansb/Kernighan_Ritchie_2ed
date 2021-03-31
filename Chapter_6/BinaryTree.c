@@ -14,17 +14,16 @@ struct tnode {              /* the tree node */
 };
 
 struct tnode *addtree(struct tnode *, char *);
+struct tnode *talloc(void);      /* for addtree */
+char *strdup_bb(char *);
 void treeprint(struct tnode *);
-int getword(char *, int);
+
 int getword(char *, int);
 int getch(void);
 void ungetch(int c);
 char buf[BUFSIZE];      /* buffer for ungetch */
 int bufp = 0;           /* next free position in buf */
 
-struct tnode *talloc(void);      /* for addtree */
-struct tnode *talloc(void);
-char *strdup_bb(char *);
 
 /* word frequency count */
 int main() {
