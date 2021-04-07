@@ -1,4 +1,4 @@
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -54,22 +54,47 @@ int getch(void);
 void ungetch(int c);
 char buf[BUFSIZE];      /* buffer for ungetch */
 int bufp = 0;           /* next free position in buf */
+int atoi_bb(char s[]);
+
+
+struct tnode {              /* the tree node */
+    char *word;             /* points to the text */
+    int count;              /* number of occurrences */
+    struct tnode *left;     /* left child */
+    struct tnode *right;    /* right child */
+};
+struct tnode *addtree(struct tnode *, char *);
+struct tnode *talloc(void);      /* for addtree */
+char *strdup_bb(char *);
+void treeprint(struct tnode *);
+
 
 /* count C keywords */
-int main() {
+int main(int argc, char *argv[]) {
+	int common_letters;
+	if (argc == 2) { common_letters = atoi_bb(argv[1]);
+	} else { common_letters = 6; }
 
 	int n;
+	struct tnode *root;
 	char word[MAXWORD];
+	char condensed_word[MAXWORD];
+	root = NULL;
 
+	/* variable names can be letters, digits, _
+		must start with letter or _ */
 	while (getword(word, MAXWORD) != EOF) {
-		printf("Examining %s\n", word);
-		if (isalpha(word[0]))
+		//printf("Examining %s\n", word);
+		if (isalpha(word[0]) || word[0] == 95)
 			if ((n = binsearch(word, keytab, NKEYS)) >= 0) {
 				keytab[n].count++;
-				printf("\t%s is a keyword\n", word);
+				//printf("\t%s is a keyword\n", word);
 			}
 			else {
-				printf("\t%s is not a keyword\n", word);
+				//printf("\t%s is not a keyword\n", word);
+				strncpy(condensed_word, word, common_letters);
+				condensed_word[common_letters] = '\0';
+				root = addtree(root, condensed_word);
 			}
 	}
 
@@ -78,6 +103,10 @@ int main() {
 		if (keytab[n].count > 0)
 			printf("%4d %s\n",
 				keytab[n].count, keytab[n].word);
+
+	/* print tree */
+	printf("\n");
+	treeprint(root);
 
 	return 0;
 }
@@ -189,4 +218,57 @@ void ungetch(int c) {   /* push character back on input */
 		printf("ungetch:  too many characters\n");
 	else
 		buf[bufp++] = c;
+}
+int atoi_bb(char s[]) {
+    int i, n, sign;
+
+    for (i = 0; isspace(s[i]); i++)  /* skip white space */
+        ;
+    sign = (s[i] == '-') ? -1 : 1;
+    if (s[i] == '+' || s[i] == '-')  /* skip sign */
+        i++;
+    for (n = 0; isdigit(s[i]); i++)
+        n = 10 * n + (s[i] - '0');
+    return sign * n;
+}
+
+/*addtree:  add a node with w, at or below p */
+struct tnode *addtree(struct tnode *p, char *w) {
+    int cond;
+
+    if (p == NULL) {    /* a new word has arrived */
+        p = talloc();   /* make a new node */
+        p->word = strdup_bb(w);
+        p->count = 1;
+        p->left = p->right = NULL;
+    } else if ((cond = strcmp(w, p->word)) == 0)
+        p->count++;         /* repeated word */
+    else if (cond < 0)      /* less than into left subtree */
+        p->left = addtree(p->left,w);
+    else                    /* greater than into right subtree */
+        p->right = addtree(p->right,w);
+    return p;
+}
+
+/* treeprint:  in-order print of tree p */
+void treeprint(struct tnode *p) {
+    if (p != NULL) {
+        treeprint(p->left);
+        printf("%4d %s \n", p->count, p->word);
+        treeprint(p->right);
+    }
+}
+
+/* talloc:  make a node */
+struct tnode *talloc(void) {
+    return (struct tnode *)malloc(sizeof(struct tnode));
+}
+
+/* stdrdup: make a duplicate of s */
+char *strdup_bb(char *s) {
+    char *p;
+    p = (char *) malloc(strlen(s)+1);  /* +1 for '\0' */
+    if (p != NULL)
+        strcpy(p, s);
+    return p;
 }

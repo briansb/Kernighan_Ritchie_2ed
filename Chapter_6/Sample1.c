@@ -10,7 +10,7 @@ int main() {
     while ((c = getchar()) != EOF) {
         while (c == 32) {
             putchar(c);
-            while ((c = getchar()) == 32) // 32 = blank
+            while ((c = getchar()) == 32) /* 32 = blank */
                 ;
         }
         putchar(c);
