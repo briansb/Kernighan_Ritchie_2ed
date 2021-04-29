@@ -6,7 +6,6 @@
 #define MAXWORD 1000     /* max size of a word */
 #define BUFSIZE 1000     /* max size of ungetch buffer */
 
-int line_number = 1;
 int getword(char *, int);
 int unwantedcharacter(int c);
 int isalpha_underscore(int c);
@@ -15,20 +14,19 @@ int getch(void);
 void ungetch(int c);
 char buf[BUFSIZE];      /* buffer for ungetch */
 int bufp = 0;           /* next free position in buf */
-
+int frequency;
 
 struct tnode {              /* the tree node */
     char *word;             /* points to the text */
     int count;              /* number of occurrences */
-	int line_numbers[BUFSIZE];  /* array of line numbers */
     struct tnode *left;     /* left child */
     struct tnode *right;    /* right child */
 };
 struct tnode *addtree(struct tnode *, char *);
 struct tnode *talloc(void);      /* for addtree */
 char *strdup_bb(char *);
-void treeprint(struct tnode *);
-
+void searchtree(struct tnode *);
+void find_max(struct tnode *p);
 
 /* cross-reference */
 int main() {
@@ -43,12 +41,33 @@ int main() {
 			root = addtree(root, word);
 	}
 
-	/* print tree */
-	treeprint(root);
 
+	/* search and printing */
+	frequency = 0;
+	find_max(root);
+	printf("Max = %d\n", frequency);
+	while (frequency > 0) {
+		searchtree(root);
+		frequency--;
+	}
 	return 0;
 }
-
+/* searchtree:  print counts equal to frequency */
+void searchtree(struct tnode *p) {
+    if (p != NULL) {
+        searchtree(p->left);
+		if (p->count == frequency) printf("%4d %s \n", p->count, p->word);
+        searchtree(p->right);
+    }
+}
+/* find_max:  find biggest count */
+void find_max(struct tnode *p) {
+    if (p != NULL) {
+        find_max(p->left);
+		if (p->count > frequency) frequency = p->count;	
+        find_max(p->right);
+    }
+}
 /* getword:  get next word or character from input */
 /* additions:  
 	1. Does not return (, ), {, }, [, ], =, ;, etc   */
@@ -120,8 +139,7 @@ int isalnum_underscore(int c) {
 	else return 0;
 }
 int unwantedcharacter(int c){
-	/* track the line number */
-	if (c == 10) line_number++;
+
 	//   whitespace         {           }          [          ]
 	if (isspace(c) || c == 123 || c == 125 || c == 91 || c == 93 ) return 1;
 	//        (          )         =          ;
@@ -149,11 +167,9 @@ struct tnode *addtree(struct tnode *p, char *w) {
         p = talloc();   /* make a new node */
         p->word = strdup_bb(w);
         p->count = 1;
-		p->line_numbers[p->count-1] = line_number;
         p->left = p->right = NULL;
     } else if ((cond = strcmp(w, p->word)) == 0) {
         p->count++;         /* repeated word */
-		p->line_numbers[p->count-1] = line_number;
 	}
     else if (cond < 0)      /* less than into left subtree */
         p->left = addtree(p->left,w);
@@ -162,16 +178,7 @@ struct tnode *addtree(struct tnode *p, char *w) {
     return p;
 }
 
-/* treeprint:  in-order print of tree p */
-void treeprint(struct tnode *p) {
-    if (p != NULL) {
-        treeprint(p->left);
-        printf("%s - ", p->word);
-		for (int i = 0; i < p->count; i++) printf("%d ", p->line_numbers[i]);
-		printf("\n");
-        treeprint(p->right);
-    }
-}
+
 
 /* talloc:  make a node */
 struct tnode *talloc(void) {
