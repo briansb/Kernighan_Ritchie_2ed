@@ -18,6 +18,7 @@ char *strdup_bb(char *);
 unsigned hash(char *s);
 struct nlist *lookup(char *s);
 struct nlist *install(char *name, char *defn);
+void undef(char *name);
 
 
 int main() {
@@ -39,11 +40,56 @@ int main() {
     struct nlist *ptr;
 	if (install("two", "2222") == NULL) printf("Name/Definition installation failed\n");
 
-    if ((ptr = lookup("nine")) != NULL) printf("Found %s and %s\n", ptr->name, ptr->defn);
-    else printf("Did not find name\n");
+    for (int i = 0; i < HASHSIZE; i++) {
+		printf("%d", i);
+		ptr = hashtab[i];
+		while (ptr != NULL) {
+			printf("\t%s\t%s", ptr->name, ptr->defn);
+			ptr = ptr->next;
+		}
+		printf("\n");
+	}
+
+    undef("six");
+	
+    for (int i = 0; i < HASHSIZE; i++) {
+		printf("%d", i);
+		ptr = hashtab[i];
+		while (ptr != NULL) {
+			printf("\t%s\t%s", ptr->name, ptr->defn);
+			ptr = ptr->next;
+		}
+		printf("\n");
+	}
 
     return 0;
 }
+
+void undef(char *s) {
+    struct nlist *np, *prev;
+    for (np = hashtab[hash(s)]; np != NULL; np = np->next) {
+        if (strcmp(s, np->name) == 0) {
+            printf("Found %s\n", s);
+            if (hashtab[hash(s)] == np) { /* first one in list */
+                hashtab[hash(s)] = np->next;
+                free(np);
+            } else if (np->next == NULL) {
+                    prev->next = NULL;
+                    free(np);
+            } else {
+                prev->next = np->next;
+                free(np);
+            }
+            return;     /* found */
+        }
+        prev = np;
+    }
+    printf("Did not find %s\n", s);
+    return;       /* not found */
+
+}
+
+
 
 /* hash:  form hash value for string s */
 unsigned hash(char *s) {
