@@ -15,25 +15,22 @@
 #include <stdio.h>
 #include <stdlib.h>     /* for atof() */
 #include <ctype.h>      /* for isdigit() */
+#include <string.h>     /* for strlen() */
 
 #define MAXOP   100     /* max size of operand or operator */
 #define NUMBER  '0'     /* signal that a number was found */
 #define MAXVAL  100     /* maximum depth of val stack */
-#define MAXOP   100     /* max size of operand or operator */
-#define BUFSIZE 100     /* max size of ungetch buffer */
 
 int sp = 0;             /* next free stack position */
 double val[MAXVAL];     /* value stack */
-char buf[BUFSIZE];      /* buffer for ungetch */
-int bufp = 0;           /* next free position in buf */
-
 
 void push (double f);   /* push value onto stack */
 double pop(void);       /* pop and return value from stack */
 int getop(char s[]);    /* getop: get next operator or numeric operand */
-int getch(void);        /* get a (possibly pushed back) character */
-void ungetch(int);      /* push character back on input */
+int getline_bb(char s[], int lim);
 
+char line[MAXOP];
+char *ptr;
 
 /* reverse Polish calculator */
 int main() {
@@ -41,6 +38,9 @@ int main() {
     float fval;
     double op2;
     char s[MAXOP];
+
+    ptr = line;
+    getline_bb(ptr, 100);
 
     while ((type = getop(s)) != EOF) {
         switch (type) {
@@ -75,6 +75,8 @@ int main() {
                 break;
             case '\n':
                 printf("\t%.8g\n", pop());
+                getline_bb(ptr, 100);
+                if (!*ptr) return 0;
                 break;
             default:
                 printf("error:  unknown command %s\n", s);
@@ -83,46 +85,26 @@ int main() {
     }
     return 0;
 }
-
 int getop(char s[]) {
-    int i, c;
-    i = 0;
+/* return operators as int, s = '\0'
+   return '\n' as int, s = '\0'
+   return NUMBER, s = the number itself as a string
+*/   
+    int j;
+    char c;
 
-    while ((s[0] = c = getch()) == ' ' || c == '\t')
-        ;
-    s[1] = '\0';
+    if (!*ptr) return '\n';
     
-    /* s[0] contains the the first character */
-    if (c == '-') {
-        if (isdigit(s[1] = c = getch())) {
-        /* found a negative number */
-        i = 1;
-        } else {
-        /* found subtraction operator */
-        ungetch(c);
-        s[1] = '\0';
-        return '-';
-        }
-    }
-
-
-
-    if (!isdigit(c) && c != '.')
-        return c;       /* not a number */
+    j = sscanf(ptr, "%s", s);       /* adds \0 to end, if last item strips \n and adds \0 */
+    ptr += strlen(s)+1;
+    if (strlen(s) == 1) {
+        sscanf(s, "%c", &c);
+        if (!isdigit(c)) return c;
+        else return NUMBER;
+    } else return NUMBER;
     
-
-    if (isdigit(c))     /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    if (c == '.')       /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    s[i] = '\0';
-    if (c != EOF)
-        ungetch(c);
-
-    return NUMBER;
 }
+
 void push(double f) {
     if (sp < MAXVAL)
         val[sp++] = f;
@@ -137,12 +119,14 @@ double pop(void) {
         return 0.0;
     }
 }
-int getch(void) { 
-    return (bufp > 0) ? buf[--bufp] : getchar();
-}
-void ungetch(int c) { 
-    if (bufp >= BUFSIZE)
-        printf("ungetch:  too many characters\n");
-    else
-        buf[bufp++] = c;
+
+int getline_bb(char s[], int lim) {
+    int c, i;
+    i = 0;
+    while (--lim > 0 && (c=getchar()) != EOF && c != '\n')
+        s[i++] = c;
+    if (c == '\n')
+        s[i++] = c;
+    s[i] = '\0';
+    return i;
 }
