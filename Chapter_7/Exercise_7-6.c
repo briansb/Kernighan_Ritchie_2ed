@@ -25,9 +25,19 @@ int main(int argc, char *argv[]) {
     }
 
     /* test */
-    int c = fgetline(line1, MAXLINELENGTH, fp2);
-    printf("%d\n", c);
-    printf("%s\n", line1);
+    int count1, count2, condition;
+    while ((count1 = fgetline(line1, MAXLINELENGTH, fp1)) != 0 && (count2 = fgetline(line2, MAXLINELENGTH, fp2)) != 0) {
+        if ((condition = strcmp(line1, line2)) != 0) {
+            printf("%s ... %s\n", line1, line2);
+            exit(0);
+        }
+    }
+    if (count1 != 0) {
+        printf("%s\n", line1);
+    } else if (count2 != 0) {
+        printf("%s\n", line2);
+    }
+
 
     return 0;
 }
