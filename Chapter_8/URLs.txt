@@ -1,0 +1,9 @@
+
+https://clc-wiki.net/wiki/K&R2_solutions:Chapter_8:Exercise_2
+
+https://www.guru99.com/c-file-input-output.html
+
+https://codeforwin.org/2018/03/c-program-to-list-all-files-in-a-directory-recursively.html
+
+https://stackoverflow.com/questions/12991334/members-of-dirent-structure
+

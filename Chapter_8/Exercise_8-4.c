@@ -1,5 +1,5 @@
 /**** FILE structure ****/
-#define BUFSIZE 4
+#define BUFSIZE 1024
 #define NULL 0
 #define EOF (-1)
 #define OPEN_MAX 20		/* max files open at once */
@@ -160,29 +160,42 @@ int fclose(FILE *fp) {
 
     return 0;
 }
+
+int fseek(FILE *, long offset, int origin);
+int get(FILE *, long pos, char *buf, int n);
+
 /* main routine */
 int main(int argc, char *argv[])
 {
 	FILE *fin;
-	char buf[1];
-    FILE *fout;
-    fout = fopen("out.txt", "a");
-    //fout = stdout;
+    char buf[BUFSIZE];
 
 	while (--argc > 0) {
 		if ((fin = fopen(*++argv, "r")) == NULL)
 			return 1;
 		else {
-			while ((buf[0] = getc(fin)) != EOF) {
-				putc(buf[0], fout);
-            }
-		    putc('\n', fout);
-            fflush(fout);
+            get(fin, 10, buf, 3);
+            write(1, buf, 3);
         }
+        buf[0] = '\n';
+        write(1,buf,1);
         fclose(fin);
 	}
-    fclose(fout);
 	return 0;
+}
+
+/* get:  read n bytes from position pos */
+int get(FILE *fp, long pos, char *buf, int n) {
+    if (fseek(fp, pos, 0) == 0)  /* get to pos */
+        return read(fp->fd, buf, n);
+    else
+        return -1;
+}
+int fseek(FILE *fp, long offset, int origin) {
+	if (lseek(fp->fd, offset, origin) >= 0) 
+		return 0;
+	else
+		return -1;
 }
 int putc(int c, FILE *p) {
 	if (--(p)->cnt >= 0)
