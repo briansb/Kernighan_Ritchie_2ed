@@ -12,6 +12,18 @@
 void file_size(char *);
 void dirwalk(char *, void(*fcn)(char *));
 
+/* print file sizes...has directory walk */
+int main(int argc, char **argv)
+{
+    if (argc == 1)       /* default:  current directory */
+        file_size(".");
+    else
+        while (--argc > 0)
+            file_size(*++argv);
+
+    return 0;
+}
+
 /* dirwalk:  apply fcn to all files in dir */
 void dirwalk(char *dir, void(*fcn)(char *)) {
     char name[MAX_PATH];
@@ -35,17 +47,6 @@ void dirwalk(char *dir, void(*fcn)(char *)) {
     closedir(dfd);
 }
 
-/* print file sizes */
-int main(int argc, char **argv)
-{
-    if (argc == 1)       /* default:  current directory */
-        file_size(".");
-    else
-        while (--argc > 0)
-            file_size(*++argv);
-
-    return 0;
-}
 
 /* prints file sizes */
 void file_size(char *name)
@@ -59,10 +60,10 @@ void file_size(char *name)
     }
     if ((stbuf.st_mode & S_IFMT) == S_IFDIR) {
         dirwalk(name, file_size);
-        printf("%s is a directory\n", name);
+        //printf("%s is a directory\n", name);
     }
     else if ((stbuf.st_mode & S_IFMT) == S_IFREG)
-        printf("%s - size = %8ld bytes\n", name, stbuf.st_size);
+        printf("%s \t %8ld bytes\n", name, stbuf.st_size);
     else
         printf("%s is something else\n", name);
     

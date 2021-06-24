@@ -1,12 +1,9 @@
 #include <stdio.h>
-#include <string.h>
-//#include <sys/types.h>
 #include <sys/stat.h>
-#include <dirent.h>
 
 void file_size(char *);
 
-/* print file sizes */
+/* print file size...no directory walk */
 int main(int argc, char **argv)
 {
     if (argc == 1)       /* default:  current directory */

@@ -1,72 +1,77 @@
-/* Not my solution...from K&R2 solutions-Chapter 8 */
-
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdlib.h>
 #include <dirent.h>
-#include <pwd.h>
-
+#include <time.h>
 
 #define MAX_PATH 1024
 
-#ifndef DIRSIZ
-#define DIRSIZ 14
-#endif
+void file_size(char *);
+void dirwalk(char *, void(*fcn)(char *));
 
+/* print file sizes...has directory walk */
+int main(int argc, char **argv)
+{
+    if (argc == 1)       /* default:  current directory */
+        file_size(".");
+    else
+        while (--argc > 0)
+            file_size(*++argv);
 
-void dirwalk( char *dir,void (*fcn)(char *)){
-
-	char name[MAX_PATH];
-	struct dirent *dp;
-	DIR *dfd;
-
-	if((dfd = opendir(dir))==NULL){
-		puts("Error: Cannot open Directory");
-		return;
-	}
-	puts(dir);
-	// Get each dir entry
-	while((dp=readdir(dfd)) != NULL){
-		// Skip . and .. is redundant.
-		if(strcmp(dp->d_name,".") == 0
-			|| strcmp(dp->d_name,"..") ==0 )
-			continue;
-		if(strlen(dir)+strlen(dp->d_name)+2 > sizeof(name))
-			puts("Error: Name too long!");
-		else{
-			sprintf(name,"%s/%s",dir,dp->d_name);
-			// Call fsize
-			(*fcn)(name);
-		}
-	}
-	closedir(dfd);
+    return 0;
 }
 
-void fsize(char *name){
-	struct stat stbuf;
+/* dirwalk:  apply fcn to all files in dir */
+void dirwalk(char *dir, void(*fcn)(char *)) {
+    char name[MAX_PATH];
+    struct dirent *dp;
+    DIR *dfd;
 
-	if(stat(name,&stbuf) == -1){
-		puts("Error: Cannot get file stats!");
-		return;
-	}
-
-	if((stbuf.st_mode & S_IFMT) == S_IFDIR){
-		dirwalk(name,fsize);
-	}
-	struct passwd *pwd = getpwuid(stbuf.st_uid);
-	//print file name,size and owner
-	printf("%81d %s Owner: %s\n",(int)stbuf.st_size,name,pwd->pw_name);
+    if ((dfd = opendir(dir)) == NULL) {
+        fprintf(stderr, "dirwalk:  can't open %s\n", dir);
+        return;
+    }
+    while ((dp = readdir(dfd)) != NULL) {
+        if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
+            continue;               /* skip self and parent */
+        if (strlen(dir) + strlen(dp->d_name) + 2 > sizeof(name))
+            fprintf(stderr, "dirwalk:  name %s/%s to long\n", dir, dp->d_name);
+        else {
+            sprintf(name, "%s/%s", dir, dp->d_name);
+            (*fcn)(name);
+        }
+    }
+    closedir(dfd);
 }
 
-int main(int argc,char *argv[]){
 
-	if(argc==1)
-		fsize(".");
-	else 
-		while(--argc>0)
-			fsize(*++argv);
-	return 0;
+/* prints file sizes */
+void file_size(char *name)
+{   
+    struct stat stbuf;  /* structure defined in sys/stat.h
+                           illustrated on page 180  */
+    struct tm mt;
+
+    if (stat(name, &stbuf) == -1) {    /* stat is a system call that returns the inode information, pg 180 */
+        fprintf(stderr, "fsize:  can't access %s\n", name);
+        return;
+    }
+    if ((stbuf.st_mode & S_IFMT) == S_IFDIR) {
+        dirwalk(name, file_size);
+        //printf("%s is a directory\n", name);
+    }
+    else if ((stbuf.st_mode & S_IFMT) == S_IFREG) {
+        mt = *localtime(&stbuf.st_mtime);
+        printf("%s \t %8ld bytes\t %4d-%02d-%02d %02d:%02d \n", name, stbuf.st_size, 
+                    (1900 + mt.tm_year), mt.tm_mon, mt.tm_mday, mt.tm_hour, mt.tm_min);
+    }
+    else
+        printf("%s is something else\n", name);
+    
 }
+
+
